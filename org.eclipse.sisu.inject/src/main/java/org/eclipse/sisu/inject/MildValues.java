@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Sonatype, Inc. and others.
+ * Copyright (c) 2010-2026 Sonatype, Inc. and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -25,14 +25,12 @@ import java.util.Set;
 /**
  * NON-thread-safe {@link Map} whose values are kept alive by soft/weak {@link Reference}s.
  */
-class MildValues<K, V>
-    implements Map<K, V>
-{
+class MildValues<K, V> implements Map<K, V> {
     // ----------------------------------------------------------------------
     // Implementation fields
     // ----------------------------------------------------------------------
 
-    final ReferenceQueue<V> queue = new ReferenceQueue<V>();
+    final ReferenceQueue<V> queue = new ReferenceQueue<>();
 
     final Map<K, Reference<V>> map;
 
@@ -42,8 +40,7 @@ class MildValues<K, V>
     // Constructors
     // ----------------------------------------------------------------------
 
-    MildValues( final Map<K, Reference<V>> map, final boolean soft )
-    {
+    MildValues(final Map<K, Reference<V>> map, final boolean soft) {
         this.map = map;
         this.soft = soft;
     }
@@ -52,117 +49,110 @@ class MildValues<K, V>
     // Public methods
     // ----------------------------------------------------------------------
 
-    public final boolean containsKey( final Object key )
-    {
+    @Override
+    public final boolean containsKey(final Object key) {
         // skip compact for performance reasons
 
-        return map.containsKey( key );
+        return map.containsKey(key);
     }
 
-    public final boolean containsValue( final Object value )
-    {
+    @Override
+    public final boolean containsValue(final Object value) {
         // skip compact for performance reasons
 
-        return map.containsValue( tempValue( value ) );
+        return map.containsValue(tempValue(value));
     }
 
-    public final V get( final Object key )
-    {
+    @Override
+    public final V get(final Object key) {
         // skip compact for performance reasons
 
-        final Reference<V> ref = map.get( key );
+        final Reference<V> ref = map.get(key);
         return null != ref ? ref.get() : null;
     }
 
-    public final V put( final K key, final V value )
-    {
+    @Override
+    public final V put(final K key, final V value) {
         compact();
 
-        final Reference<V> ref = map.put( key, mildValue( key, value ) );
+        final Reference<V> ref = map.put(key, mildValue(key, value));
         return null != ref ? ref.get() : null;
     }
 
-    public final void putAll( final Map<? extends K, ? extends V> m )
-    {
+    @Override
+    public final void putAll(final Map<? extends K, ? extends V> m) {
         compact();
 
-        for ( final Entry<? extends K, ? extends V> e : m.entrySet() )
-        {
-            map.put( e.getKey(), mildValue( e.getKey(), e.getValue() ) );
+        for (final Entry<? extends K, ? extends V> e : m.entrySet()) {
+            map.put(e.getKey(), mildValue(e.getKey(), e.getValue()));
         }
     }
 
-    public final V remove( final Object key )
-    {
+    @Override
+    public final V remove(final Object key) {
         compact();
 
-        final Reference<V> ref = map.remove( key );
+        final Reference<V> ref = map.remove(key);
         return null != ref ? ref.get() : null;
     }
 
-    public final void clear()
-    {
+    @Override
+    public final void clear() {
         map.clear();
 
         compact();
     }
 
-    public final boolean isEmpty()
-    {
+    @Override
+    public final boolean isEmpty() {
         compact();
 
         return map.isEmpty();
     }
 
-    public final int size()
-    {
+    @Override
+    public final int size() {
         compact();
 
         return map.size();
     }
 
-    public final Set<K> keySet()
-    {
+    @Override
+    public final Set<K> keySet() {
         compact();
 
         return map.keySet();
     }
 
-    public final Collection<V> values()
-    {
+    @Override
+    public final Collection<V> values() {
         compact();
 
-        return new AbstractCollection<V>()
-        {
+        return new AbstractCollection<V>() {
             @Override
-            public Iterator<V> iterator()
-            {
+            public Iterator<V> iterator() {
                 return new ValueItr();
             }
 
             @Override
-            public int size()
-            {
+            public int size() {
                 return map.size();
             }
         };
     }
 
-    public final Set<Entry<K, V>> entrySet()
-    {
+    @Override
+    public final Set<Entry<K, V>> entrySet() {
         compact();
 
-        return new AbstractSet<Entry<K, V>>()
-        {
+        return new AbstractSet<Entry<K, V>>() {
             @Override
-            public Iterator<Entry<K, V>> iterator()
-            {
+            public Iterator<Entry<K, V>> iterator() {
                 return new EntryItr();
             }
 
             @Override
-            public int size()
-            {
+            public int size() {
                 return map.size();
             }
         };
@@ -175,31 +165,26 @@ class MildValues<K, V>
     /**
      * @return Soft or weak {@link Reference} for the given key-value mapping.
      */
-    final Reference<V> mildValue( final K key, final V value )
-    {
-        return soft ? new Soft<K, V>( key, value, queue ) : new Weak<K, V>( key, value, queue );
+    final Reference<V> mildValue(final K key, final V value) {
+        return soft ? new Soft<>(key, value, queue) : new Weak<>(key, value, queue);
     }
 
     /**
      * @return Temporary {@link Reference} for the given value; used in queries.
      */
-    static final <V> Reference<V> tempValue( final V value )
-    {
-        return new Weak<V, V>( null, value, null );
+    static final <V> Reference<V> tempValue(final V value) {
+        return new Weak<V, V>(null, value, null);
     }
 
     /**
      * Compacts the map by removing cleared values.
      */
-    void compact()
-    {
-        for ( Reference<? extends V> ref; ( ref = queue.poll() ) != null; )
-        {
+    void compact() {
+        for (Reference<? extends V> ref; (ref = queue.poll()) != null; ) {
             // only remove this specific key-value mapping
-            final Object key = ( (InverseMapping) ref ).key();
-            if ( map.get( key ) == ref )
-            {
-                map.remove( key );
+            final Object key = ((InverseMapping) ref).key();
+            if (map.get(key) == ref) {
+                map.remove(key);
             }
         }
     }
@@ -211,18 +196,14 @@ class MildValues<K, V>
     /**
      * Represents an inverse mapping from a value to its key.
      */
-    interface InverseMapping
-    {
+    interface InverseMapping {
         Object key();
     }
 
     /**
      * Soft value with an {@link InverseMapping} back to its key.
      */
-    private static final class Soft<K, V>
-        extends MildKeys.Soft<V>
-        implements InverseMapping
-    {
+    private static final class Soft<K, V> extends MildKeys.Soft<V> implements InverseMapping {
         // ----------------------------------------------------------------------
         // Implementation fields
         // ----------------------------------------------------------------------
@@ -233,9 +214,8 @@ class MildValues<K, V>
         // Constructors
         // ----------------------------------------------------------------------
 
-        Soft( final K key, final V value, final ReferenceQueue<V> queue )
-        {
-            super( value, queue );
+        Soft(final K key, final V value, final ReferenceQueue<V> queue) {
+            super(value, queue);
             this.key = key;
         }
 
@@ -243,8 +223,8 @@ class MildValues<K, V>
         // Public methods
         // ----------------------------------------------------------------------
 
-        public Object key()
-        {
+        @Override
+        public Object key() {
             return key;
         }
     }
@@ -252,10 +232,7 @@ class MildValues<K, V>
     /**
      * Weak value with an {@link InverseMapping} back to its key.
      */
-    private static final class Weak<K, V>
-        extends MildKeys.Weak<V>
-        implements InverseMapping
-    {
+    private static final class Weak<K, V> extends MildKeys.Weak<V> implements InverseMapping {
         // ----------------------------------------------------------------------
         // Implementation fields
         // ----------------------------------------------------------------------
@@ -266,9 +243,8 @@ class MildValues<K, V>
         // Constructors
         // ----------------------------------------------------------------------
 
-        Weak( final K key, final V value, final ReferenceQueue<V> queue )
-        {
-            super( value, queue );
+        Weak(final K key, final V value, final ReferenceQueue<V> queue) {
+            super(value, queue);
             this.key = key;
         }
 
@@ -276,8 +252,8 @@ class MildValues<K, V>
         // Public methods
         // ----------------------------------------------------------------------
 
-        public Object key()
-        {
+        @Override
+        public Object key() {
             return key;
         }
     }
@@ -285,9 +261,7 @@ class MildValues<K, V>
     /**
      * {@link Iterator} that iterates over reachable values in the map.
      */
-    final class ValueItr
-        implements Iterator<V>
-    {
+    final class ValueItr implements Iterator<V> {
         // ----------------------------------------------------------------------
         // Implementation fields
         // ----------------------------------------------------------------------
@@ -300,20 +274,18 @@ class MildValues<K, V>
         // Public methods
         // ----------------------------------------------------------------------
 
-        public boolean hasNext()
-        {
+        @Override
+        public boolean hasNext() {
             // find next value that is still reachable
-            while ( null == nextValue && itr.hasNext() )
-            {
+            while (null == nextValue && itr.hasNext()) {
                 nextValue = itr.next().get();
             }
             return null != nextValue;
         }
 
-        public V next()
-        {
-            if ( hasNext() )
-            {
+        @Override
+        public V next() {
+            if (hasNext()) {
                 // populated by hasNext()
                 final V value = nextValue;
                 nextValue = null;
@@ -322,8 +294,8 @@ class MildValues<K, V>
             throw new NoSuchElementException();
         }
 
-        public void remove()
-        {
+        @Override
+        public void remove() {
             itr.remove();
         }
     }
@@ -331,9 +303,7 @@ class MildValues<K, V>
     /**
      * {@link Iterator} that iterates over reachable entries in the map.
      */
-    final class EntryItr
-        implements Iterator<Entry<K, V>>
-    {
+    final class EntryItr implements Iterator<Entry<K, V>> {
         // ----------------------------------------------------------------------
         // Implementation fields
         // ----------------------------------------------------------------------
@@ -348,23 +318,21 @@ class MildValues<K, V>
         // Public methods
         // ----------------------------------------------------------------------
 
-        public boolean hasNext()
-        {
+        @Override
+        public boolean hasNext() {
             // find next entry that is still reachable
-            while ( null == nextValue && itr.hasNext() )
-            {
+            while (null == nextValue && itr.hasNext()) {
                 nextEntry = itr.next();
                 nextValue = nextEntry.getValue().get();
             }
             return null != nextValue;
         }
 
-        public Entry<K, V> next()
-        {
-            if ( hasNext() )
-            {
+        @Override
+        public Entry<K, V> next() {
+            if (hasNext()) {
                 // populated by hasNext()
-                final Entry<K, V> entry = new StrongEntry( nextEntry, nextValue );
+                final Entry<K, V> entry = new StrongEntry(nextEntry, nextValue);
                 nextEntry = null;
                 nextValue = null;
                 return entry;
@@ -372,8 +340,8 @@ class MildValues<K, V>
             throw new NoSuchElementException();
         }
 
-        public void remove()
-        {
+        @Override
+        public void remove() {
             itr.remove();
         }
     }
@@ -381,9 +349,7 @@ class MildValues<K, V>
     /**
      * {@link Entry} that delegates to the original entry, but maintains a strong reference to the value.
      */
-    final class StrongEntry
-        implements Entry<K, V>
-    {
+    final class StrongEntry implements Entry<K, V> {
         // ----------------------------------------------------------------------
         // Implementation fields
         // ----------------------------------------------------------------------
@@ -396,8 +362,7 @@ class MildValues<K, V>
         // Constructors
         // ----------------------------------------------------------------------
 
-        StrongEntry( final Entry<K, Reference<V>> entry, final V value )
-        {
+        StrongEntry(final Entry<K, Reference<V>> entry, final V value) {
             this.entry = entry;
             this.value = value;
         }
@@ -406,20 +371,20 @@ class MildValues<K, V>
         // Public methods
         // ----------------------------------------------------------------------
 
-        public K getKey()
-        {
+        @Override
+        public K getKey() {
             return entry.getKey();
         }
 
-        public V getValue()
-        {
+        @Override
+        public V getValue() {
             return value;
         }
 
-        public V setValue( final V newValue )
-        {
+        @Override
+        public V setValue(final V newValue) {
             final V oldValue = value;
-            entry.setValue( mildValue( getKey(), newValue ) );
+            entry.setValue(mildValue(getKey(), newValue));
             value = newValue;
             return oldValue;
         }

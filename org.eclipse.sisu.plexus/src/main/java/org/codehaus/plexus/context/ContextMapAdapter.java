@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Sonatype, Inc. and others.
+ * Copyright (c) 2010-2026 Sonatype, Inc. and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -16,9 +16,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public final class ContextMapAdapter
-    implements Map<Object, Object>
-{
+public final class ContextMapAdapter implements Map<Object, Object> {
     // ----------------------------------------------------------------------
     // Implementation fields
     // ----------------------------------------------------------------------
@@ -29,8 +27,7 @@ public final class ContextMapAdapter
     // Constructors
     // ----------------------------------------------------------------------
 
-    public ContextMapAdapter( final Context context )
-    {
+    public ContextMapAdapter(final Context context) {
         contextData = context.getContextData();
     }
 
@@ -41,9 +38,9 @@ public final class ContextMapAdapter
     /*
      * Only method used when interpolating Plexus configuration
      */
-    public Object get( final Object key )
-    {
-        final Object value = contextData.get( key );
+    @Override
+    public Object get(final Object key) {
+        final Object value = contextData.get(key);
         return value instanceof String ? value : null;
     }
 
@@ -51,58 +48,58 @@ public final class ContextMapAdapter
     // Unsupported methods
     // ----------------------------------------------------------------------
 
-    public int size()
-    {
+    @Override
+    public int size() {
         throw new UnsupportedOperationException();
     }
 
-    public boolean isEmpty()
-    {
+    @Override
+    public boolean isEmpty() {
         throw new UnsupportedOperationException();
     }
 
-    public boolean containsKey( final Object key )
-    {
+    @Override
+    public boolean containsKey(final Object key) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean containsValue( final Object value )
-    {
+    @Override
+    public boolean containsValue(final Object value) {
         throw new UnsupportedOperationException();
     }
 
-    public Object put( final Object key, final Object value )
-    {
+    @Override
+    public Object put(final Object key, final Object value) {
         throw new UnsupportedOperationException();
     }
 
-    public void putAll( final Map<?, ?> map )
-    {
+    @Override
+    public void putAll(final Map<?, ?> map) {
         throw new UnsupportedOperationException();
     }
 
-    public Object remove( final Object key )
-    {
+    @Override
+    public Object remove(final Object key) {
         throw new UnsupportedOperationException();
     }
 
-    public void clear()
-    {
+    @Override
+    public void clear() {
         throw new UnsupportedOperationException();
     }
 
-    public Set<Object> keySet()
-    {
+    @Override
+    public Set<Object> keySet() {
         throw new UnsupportedOperationException();
     }
 
-    public Collection<Object> values()
-    {
+    @Override
+    public Collection<Object> values() {
         throw new UnsupportedOperationException();
     }
 
-    public Set<Entry<Object, Object>> entrySet()
-    {
+    @Override
+    public Set<Entry<Object, Object>> entrySet() {
         throw new UnsupportedOperationException();
     }
 }
