@@ -10,12 +10,17 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Arrays;
 import java.util.HashSet;
-import junit.framework.TestCase;
 import org.codehaus.plexus.component.annotations.Component;
+import org.junit.jupiter.api.Test;
 
-public class ComponentAnnotationTest extends TestCase {
+class ComponentAnnotationTest {
     interface A {}
 
     @Component(role = A.class)
@@ -42,7 +47,8 @@ public class ComponentAnnotationTest extends TestCase {
     @Component(role = Simple.class, isolatedRealm = true)
     static class Simple3 extends Simple {}
 
-    public void testComponentImpl() throws ClassNotFoundException {
+    @Test
+    void testComponentImpl() throws ClassNotFoundException {
         checkBehaviour("DefaultA");
         checkBehaviour("NamedA");
         checkBehaviour("PrototypeA");
@@ -89,7 +95,8 @@ public class ComponentAnnotationTest extends TestCase {
         return new ComponentImpl(orig.role(), orig.hint(), orig.instantiationStrategy(), orig.description());
     }
 
-    public void testNullChecks() {
+    @Test
+    void testNullChecks() {
         checkNullNotAllowed(null, "", "", "");
         checkNullNotAllowed(Object.class, null, "", "");
         checkNullNotAllowed(Object.class, "", null, "");
@@ -98,10 +105,7 @@ public class ComponentAnnotationTest extends TestCase {
 
     private static void checkNullNotAllowed(
             final Class<?> role, final String hint, final String instantationStrategy, final String description) {
-        try {
-            new ComponentImpl(role, hint, instantationStrategy, description);
-            fail("Expected IllegalArgumentException");
-        } catch (final IllegalArgumentException e) {
-        }
+        assertThrows(
+                IllegalArgumentException.class, () -> new ComponentImpl(role, hint, instantationStrategy, description));
     }
 }

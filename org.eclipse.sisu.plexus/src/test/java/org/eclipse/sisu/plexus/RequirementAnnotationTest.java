@@ -10,15 +10,17 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import junit.framework.TestCase;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.junit.jupiter.api.Test;
 
-public class RequirementAnnotationTest extends TestCase {
+class RequirementAnnotationTest {
     @Requirement
     String defaultReq;
 
@@ -42,7 +44,8 @@ public class RequirementAnnotationTest extends TestCase {
             hints = {"A", "B", "C"})
     List<String> namedStringListReq;
 
-    public void testRequirementImpl() throws NoSuchFieldException {
+    @Test
+    void testRequirementImpl() throws NoSuchFieldException {
         checkBehaviour("defaultReq");
         checkBehaviour("stringReq");
         checkBehaviour("namedReq");
@@ -51,10 +54,10 @@ public class RequirementAnnotationTest extends TestCase {
         checkBehaviour("namedStringReq");
         checkBehaviour("namedStringListReq");
 
-        assertFalse(replicate(getRequirement("defaultReq")).equals(getRequirement("stringReq")));
-        assertFalse(replicate(getRequirement("stringReq")).equals(getRequirement("namedStringReq")));
-        assertFalse(replicate(getRequirement("defaultReq")).equals(getRequirement("namedListReq")));
-        assertFalse(replicate(getRequirement("defaultReq")).equals(getRequirement("optionalReq")));
+        assertNotEquals(replicate(getRequirement("defaultReq")), getRequirement("stringReq"));
+        assertNotEquals(replicate(getRequirement("stringReq")), getRequirement("namedStringReq"));
+        assertNotEquals(replicate(getRequirement("defaultReq")), getRequirement("namedListReq"));
+        assertNotEquals(replicate(getRequirement("defaultReq")), getRequirement("optionalReq"));
     }
 
     private static void checkBehaviour(final String name) throws NoSuchFieldException {

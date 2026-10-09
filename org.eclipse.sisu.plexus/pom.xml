@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.eclipse.sisu</groupId>
     <artifactId>sisu-inject</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>org.eclipse.sisu.plexus</artifactId>
@@ -94,6 +94,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>

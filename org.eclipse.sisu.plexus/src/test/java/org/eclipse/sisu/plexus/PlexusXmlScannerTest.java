@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.google.inject.TypeLiteral;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -21,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import junit.framework.TestCase;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.sisu.bean.BeanProperty;
@@ -30,11 +31,12 @@ import org.eclipse.sisu.inject.DeferredProvider;
 import org.eclipse.sisu.space.ClassSpace;
 import org.eclipse.sisu.space.LoadedClass;
 import org.eclipse.sisu.space.URLClassSpace;
+import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class PlexusXmlScannerTest extends TestCase {
+class PlexusXmlScannerTest {
     static class NamedProperty implements BeanProperty<Object> {
         final String name;
 
@@ -112,7 +114,8 @@ public class PlexusXmlScannerTest extends TestCase {
         }
     }
 
-    public void testLoadOnStart() {
+    @Test
+    void testLoadOnStart() {
         final URL plexusXml = getClass().getResource("/META-INF/plexus/plexus.xml");
         final PlexusXmlScanner scanner = new PlexusXmlScanner(null, plexusXml, null);
 
@@ -128,14 +131,16 @@ public class PlexusXmlScannerTest extends TestCase {
         assertEquals(DebugBean.class, componentMap.get(component2).load());
     }
 
-    public void testBadPlexusXml() {
+    @Test
+    void testBadPlexusXml() {
         final ClassSpace space = new URLClassSpace(PlexusXmlScannerTest.class.getClassLoader());
         final URL plexusXml = getClass().getResource("/META-INF/plexus/bad_plexus_1.xml");
         new PlexusXmlScanner(null, plexusXml, null).scan(space, true);
     }
 
+    @Test
     @SuppressWarnings("deprecation")
-    public void testComponents() {
+    void testComponents() {
         final ClassSpace space = new URLClassSpace(PlexusXmlScannerTest.class.getClassLoader());
 
         final Map<String, PlexusBeanMetadata> metadata = new HashMap<>();
@@ -160,11 +165,7 @@ public class PlexusXmlScannerTest extends TestCase {
         final Class<?> proxy =
                 CustomTestClassLoader.proxy(componentMap.get(component4).load());
 
-        try {
-            assertNotNull(proxy.getMethod("TestMe"));
-        } catch (final NoSuchMethodException e) {
-            fail("Proxied class is missing 'TestMe' method");
-        }
+        assertDoesNotThrow(() -> assertNotNull(proxy.getMethod("TestMe")));
 
         final PlexusBeanMetadata metadata1 = metadata.get(DefaultBean.class.getName());
 
@@ -264,7 +265,8 @@ public class PlexusXmlScannerTest extends TestCase {
         }
     }
 
-    public void testBadComponentsXml() {
+    @Test
+    void testBadComponentsXml() {
         ClassSpace space;
 
         space = new FixedClassSpace("/META-INF/plexus/bad_components_1.xml");
@@ -273,27 +275,21 @@ public class PlexusXmlScannerTest extends TestCase {
         space = new FixedClassSpace("/META-INF/plexus/bad_components_2.xml");
         new PlexusXmlScanner(null, null, null).scan(space, true);
 
-        try {
-            space = new FixedClassSpace("/META-INF/plexus/bad_components_3.xml");
-            final Map<String, PlexusBeanMetadata> metadata = new HashMap<>();
-            final PlexusXmlScanner scanner = new PlexusXmlScanner(null, null, metadata);
-
-            scanner.scan(space, true);
-
-            final Requirement badReq =
-                    metadata.get(DefaultBean.class.getName()).getRequirement(new NamedProperty("no.such.class"));
-
-            badReq.role();
-            fail("Expected TypeNotPresentException");
-        } catch (final TypeNotPresentException e) {
-        }
+        space = new FixedClassSpace("/META-INF/plexus/bad_components_3.xml");
+        final Map<String, PlexusBeanMetadata> metadata = new HashMap<>();
+        PlexusXmlScanner scanner = new PlexusXmlScanner(null, null, metadata);
+        scanner.scan(space, true);
+        final Requirement badReq =
+                metadata.get(DefaultBean.class.getName()).getRequirement(new NamedProperty("no.such.class"));
+        assertThrows(TypeNotPresentException.class, badReq::role);
 
         space = new FixedClassSpace("/META-INF/plexus/bad_components_4.xml");
-        final PlexusXmlScanner scanner = new PlexusXmlScanner(null, null, null);
+        scanner = new PlexusXmlScanner(null, null, null);
         assertTrue(scanner.scan(space, true).isEmpty());
     }
 
-    public void testInterpolatedComponentsXml() {
+    @Test
+    void testInterpolatedComponentsXml() {
         final ClassSpace space = new FixedClassSpace("/META-INF/plexus/variable_components.xml");
 
         final Map<String, PlexusBeanMetadata> metadata = new HashMap<>();
@@ -317,40 +313,44 @@ public class PlexusXmlScannerTest extends TestCase {
                         .value());
     }
 
-    public void testLocalizedXmlScanning() {
+    @Test
+    void testLocalizedXmlScanning() {
         final ClassSpace space = new URLClassSpace(PlexusXmlScannerTest.class.getClassLoader(), null);
 
         assertFalse(new PlexusXmlScanner(null, null, null).scan(space, true).isEmpty());
         assertTrue(new PlexusXmlScanner(null, null, null).scan(space, false).isEmpty());
     }
 
-    public void testOptionalLogging() throws Exception {
-        final Level level = Logger.getLogger("").getLevel();
-        try {
-            Logger.getLogger("").setLevel(Level.SEVERE);
+    @Test
+    void testOptionalLogging() throws Exception {
+        assertDoesNotThrow(() -> {
+            final Level level = Logger.getLogger("").getLevel();
+            try {
+                Logger.getLogger("").setLevel(Level.SEVERE);
 
-            // check everything still works without any SLF4J jars
-            final ClassLoader noLoggingLoader =
-                    new URLClassLoader(new URLClassSpace(getClass().getClassLoader()).getURLs(), null) {
-                        @Override
-                        protected synchronized Class<?> loadClass(final String name, final boolean resolve)
-                                throws ClassNotFoundException {
-                            if (name.contains("slf4j")) {
-                                throw new ClassNotFoundException(name);
+                // check everything still works without any SLF4J jars
+                final ClassLoader noLoggingLoader =
+                        new URLClassLoader(new URLClassSpace(getClass().getClassLoader()).getURLs(), null) {
+                            @Override
+                            protected synchronized Class<?> loadClass(final String name, final boolean resolve)
+                                    throws ClassNotFoundException {
+                                if (name.contains("slf4j")) {
+                                    throw new ClassNotFoundException(name);
+                                }
+                                if (name.contains("cobertura")) {
+                                    return PlexusXmlScannerTest.class
+                                            .getClassLoader()
+                                            .loadClass(name);
+                                }
+                                return super.loadClass(name, resolve);
                             }
-                            if (name.contains("cobertura")) {
-                                return PlexusXmlScannerTest.class
-                                        .getClassLoader()
-                                        .loadClass(name);
-                            }
-                            return super.loadClass(name, resolve);
-                        }
-                    };
+                        };
 
-            noLoggingLoader.loadClass(SimpleScanningExample.class.getName()).newInstance();
-        } finally {
-            Logger.getLogger("").setLevel(level);
-        }
+                noLoggingLoader.loadClass(SimpleScanningExample.class.getName()).newInstance();
+            } finally {
+                Logger.getLogger("").setLevel(level);
+            }
+        });
     }
 
     static final class CustomTestClassLoader extends ClassLoader {

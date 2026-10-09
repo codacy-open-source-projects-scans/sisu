@@ -6,13 +6,12 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,24 +39,24 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluator
 import org.codehaus.plexus.component.configurator.expression.TypeAwareExpressionEvaluator;
 import org.codehaus.plexus.configuration.DefaultPlexusConfiguration;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-public class BasicComponentConfiguratorTest {
-    @Rule
-    public TemporaryFolder tmpDirectory = new TemporaryFolder();
+class BasicComponentConfiguratorTest {
+
+    @TempDir
+    Path tmpDirectory;
 
     private ComponentConfigurator configurator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         configurator = new BasicComponentConfigurator();
     }
 
     @Test
-    public void testSimplePathOnDefaultFileSystem() throws ComponentConfigurationException {
+    void testSimplePathOnDefaultFileSystem() throws ComponentConfigurationException {
         PathTestComponent component = new PathTestComponent();
         Path absolutePath = Paths.get("").resolve("absolute").toAbsolutePath();
         configure(
@@ -70,24 +69,22 @@ public class BasicComponentConfiguratorTest {
                 "readme.txt",
                 "absoluteFile",
                 absolutePath.toString());
-        // path must be converted to absolute one
-        assertEquals(tmpDirectory.getRoot().toPath().resolve("readme.txt"), component.path);
+        assertEquals(tmpDirectory.resolve("readme.txt"), component.path);
         assertEquals(FileSystems.getDefault(), component.path.getFileSystem());
         assertEquals(absolutePath, component.absolutePath);
-        assertEquals(new File(tmpDirectory.getRoot(), "readme.txt"), component.file);
+        assertEquals(tmpDirectory.resolve("readme.txt").toFile(), component.file);
         assertEquals(absolutePath.toFile(), component.absoluteFile);
     }
 
     @Test
-    public void testTypeWithoutConverterButConstructorAcceptingString()
-            throws ComponentConfigurationException, IOException {
+    void testTypeWithoutConverterButConstructorAcceptingString() throws ComponentConfigurationException {
         CustomTypeComponent component = new CustomTypeComponent();
         configure(component, "custom", "hello world");
         assertEquals("hello world", component.custom.toString());
     }
 
     @Test
-    public void testTypePassedToExpressionEvaluator() throws ComponentConfigurationException {
+    void testTypePassedToExpressionEvaluator() throws ComponentConfigurationException {
         CustomTypeComponent component = new CustomTypeComponent();
         ExpressionEvaluator evaluator = new TypeAwareExpressionEvaluator() {
             @Override
@@ -112,7 +109,7 @@ public class BasicComponentConfiguratorTest {
     }
 
     @Test
-    public void testTemporalConvertersWithoutMillisecondsAndOffset() throws ComponentConfigurationException {
+    void testTemporalConvertersWithoutMillisecondsAndOffset() throws ComponentConfigurationException {
         TemporalComponent component = new TemporalComponent();
         String dateString = "2023-01-02 03:04:05";
         configure(
@@ -142,7 +139,7 @@ public class BasicComponentConfiguratorTest {
     }
 
     @Test
-    public void testTemporalConvertersWithISO8601StringWithOffset() throws ComponentConfigurationException {
+    void testTemporalConvertersWithISO8601StringWithOffset() throws ComponentConfigurationException {
         TemporalComponent component = new TemporalComponent();
         String dateString = "2023-01-02T03:04:05.000000900+02:30";
         configure(
@@ -172,7 +169,7 @@ public class BasicComponentConfiguratorTest {
     }
 
     @Test
-    public void testTemporalConvertersWithInvalidString() {
+    void testTemporalConvertersWithInvalidString() {
         TemporalComponent component = new TemporalComponent();
         String dateString = "invalid";
         assertThrows(
@@ -196,7 +193,7 @@ public class BasicComponentConfiguratorTest {
     }
 
     @Test
-    public void testConfigureComplexBean() throws Exception {
+    void testConfigureComplexBean() throws Exception {
         ComplexBean complexBean = new ComplexBean();
 
         // configure( complexBean, "resources", "foo;bar" );
@@ -213,9 +210,9 @@ public class BasicComponentConfiguratorTest {
                 config,
                 new ClassWorld("foo", Thread.currentThread().getContextClassLoader()).getClassRealm("foo"));
 
-        assertEquals(complexBean.resources.size(), 2);
-        assertTrue(complexBean.resources.toString(), complexBean.resources.contains(Resource.newResource("foo")));
-        assertTrue(complexBean.resources.toString(), complexBean.resources.contains(Resource.newResource("bar")));
+        assertEquals(2, complexBean.resources.size());
+        assertTrue(complexBean.resources.contains(Resource.newResource("foo")), complexBean.resources.toString());
+        assertTrue(complexBean.resources.contains(Resource.newResource("bar")), complexBean.resources.toString());
     }
 
     private void configure(Object component, String... keysAndValues) throws ComponentConfigurationException {
@@ -247,7 +244,7 @@ public class BasicComponentConfiguratorTest {
                 @Override
                 public File alignToBaseDirectory(File path) {
                     if (!path.isAbsolute()) {
-                        return new File(tmpDirectory.getRoot(), path.getPath());
+                        return tmpDirectory.resolve(path.getPath()).toFile();
                     } else {
                         return path;
                     }

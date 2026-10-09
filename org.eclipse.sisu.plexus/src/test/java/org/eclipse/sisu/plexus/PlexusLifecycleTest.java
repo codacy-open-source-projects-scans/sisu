@@ -10,17 +10,36 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.inject.AbstractModule;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import junit.framework.TestCase;
 import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Startable;
+import org.junit.jupiter.api.Test;
 
-public class PlexusLifecycleTest extends TestCase {
+class PlexusLifecycleTest {
+    static class Jsr330Bean {
+        private final StringBuilder results = new StringBuilder();
+
+        @org.eclipse.sisu.PostConstruct
+        public void start() {
+            results.append("<");
+        }
+
+        @org.eclipse.sisu.PreDestroy
+        public void stop() {
+            results.append(">");
+        }
+
+        @Override
+        public String toString() {
+            return results.toString();
+        }
+    }
+
     static class PlexusBean implements Startable {
         private final StringBuilder results = new StringBuilder();
 
@@ -43,12 +62,12 @@ public class PlexusLifecycleTest extends TestCase {
     static class Jsr250Bean {
         private final StringBuilder results = new StringBuilder();
 
-        @PostConstruct
+        @javax.annotation.PostConstruct
         public void start() {
             results.append("{");
         }
 
-        @PreDestroy
+        @javax.annotation.PreDestroy
         public void stop() {
             results.append("}");
         }
@@ -59,7 +78,25 @@ public class PlexusLifecycleTest extends TestCase {
         }
     }
 
-    public void testPlexusLifecycle() throws Exception {
+    @Test
+    void testJsr330Lifecycle() throws Exception {
+        // no lifecycle enabled; does not work
+        PlexusContainer container = createContainer(false);
+        Jsr330Bean bean = container.lookup(Jsr330Bean.class);
+        assertEquals("", bean.toString());
+        container.dispose();
+        assertEquals("", bean.toString());
+
+        // with jsr250 enabled; works
+        container = createContainer(true);
+        bean = container.lookup(Jsr330Bean.class);
+        assertEquals("<", bean.toString());
+        container.dispose();
+        assertEquals("<>", bean.toString());
+    }
+
+    @Test
+    void testPlexusLifecycle() throws Exception {
         // standard Plexus lifecycle is always enabled
         PlexusContainer container = createContainer(false);
         PlexusBean bean = container.lookup(PlexusBean.class);
@@ -75,7 +112,8 @@ public class PlexusLifecycleTest extends TestCase {
         assertEquals("<>", bean.toString());
     }
 
-    public void testJsr250Lifecycle() throws Exception {
+    @Test
+    void testJsr250Lifecycle() throws Exception {
         // nothing should happen as JSR250 is off by default
         PlexusContainer container = createContainer(false);
         Jsr250Bean bean = container.lookup(Jsr250Bean.class);
@@ -96,6 +134,7 @@ public class PlexusLifecycleTest extends TestCase {
         return new DefaultPlexusContainer(config.setJSR250Lifecycle(jsr250), new AbstractModule() {
             @Override
             protected void configure() {
+                bind(Jsr330Bean.class);
                 bind(PlexusBean.class);
                 bind(Jsr250Bean.class);
             }

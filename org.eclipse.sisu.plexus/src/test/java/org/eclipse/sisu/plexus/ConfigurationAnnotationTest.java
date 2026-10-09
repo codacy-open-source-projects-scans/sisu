@@ -10,12 +10,17 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Arrays;
 import java.util.HashSet;
-import junit.framework.TestCase;
 import org.codehaus.plexus.component.annotations.Configuration;
+import org.junit.jupiter.api.Test;
 
-public class ConfigurationAnnotationTest extends TestCase {
+class ConfigurationAnnotationTest {
     @Configuration("Default")
     String defaultConfig;
 
@@ -25,7 +30,8 @@ public class ConfigurationAnnotationTest extends TestCase {
     @Configuration("${property}")
     String propertyConfig;
 
-    public void testConfigurationImpl() throws NoSuchFieldException {
+    @Test
+    void testConfigurationImpl() throws NoSuchFieldException {
         checkBehaviour("defaultConfig");
         checkBehaviour("namedConfig");
         checkBehaviour("propertyConfig");
@@ -64,16 +70,13 @@ public class ConfigurationAnnotationTest extends TestCase {
         return new ConfigurationImpl(orig.name(), orig.value());
     }
 
-    public void testNullChecks() {
+    @Test
+    void testNullChecks() {
         checkNullNotAllowed(null, "");
         checkNullNotAllowed("", null);
     }
 
     private static void checkNullNotAllowed(final String name, final String value) {
-        try {
-            new ConfigurationImpl(name, value);
-            fail("Expected IllegalArgumentException");
-        } catch (final IllegalArgumentException e) {
-        }
+        assertThrows(IllegalArgumentException.class, () -> new ConfigurationImpl(name, value));
     }
 }

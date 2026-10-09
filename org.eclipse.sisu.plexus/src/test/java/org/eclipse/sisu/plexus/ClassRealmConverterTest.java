@@ -10,13 +10,16 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.component.configurator.converters.special.ClassRealmConverter;
+import org.junit.jupiter.api.Test;
 
-public class ClassRealmConverterTest extends TestCase {
-    public void testClassRealmStack() throws Exception {
+class ClassRealmConverterTest {
+    @Test
+    void testClassRealmStack() throws Exception {
         final ClassWorld world = new ClassWorld();
 
         final ClassRealm realmA = world.newRealm("A");

@@ -10,18 +10,22 @@
  *******************************************************************************/
 package org.eclipse.sisu.plexus;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.name.Names;
 import java.net.URI;
-import java.util.Arrays;
 import javax.inject.Inject;
 import javax.inject.Named;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ArrayConstantTest extends TestCase {
-    @Override
-    protected void setUp() throws Exception {
+class ArrayConstantTest {
+
+    @BeforeEach
+    void setUp() {
         Guice.createInjector(new AbstractModule() {
                     private void bind(final String name, final String value) {
                         bindConstant().annotatedWith(Names.named(name)).to(value);
@@ -74,26 +78,29 @@ public class ArrayConstantTest extends TestCase {
     @Named("Multi")
     double[][] multi2;
 
-    public void testEmptyArray() {
+    @Test
+    void testEmptyArray() {
         assertEquals(0, empty.length);
     }
 
-    @SuppressWarnings("boxing")
-    public void testCustomArray() {
-        assertTrue(Arrays.equals(new Object[] {true, URI.create("file:temp"), 8.1f}, custom));
+    @Test
+    void testCustomArray() {
+        assertArrayEquals(new Object[] {true, URI.create("file:temp"), 8.1f}, custom);
     }
 
-    public void testStringArray() {
-        assertTrue(Arrays.equals(new String[] {"1", "2", "3"}, text));
+    @Test
+    void testStringArray() {
+        assertArrayEquals(new String[] {"1", "2", "3"}, text);
     }
 
-    public void testPrimitiveArray() {
-        assertTrue(Arrays.equals(new int[] {4, 5, 6}, numbers));
+    @Test
+    void testPrimitiveArray() {
+        assertArrayEquals(new int[] {4, 5, 6}, numbers);
     }
 
-    @SuppressWarnings("boxing")
-    public void testMultiArrays() {
-        assertTrue(Arrays.deepEquals(new Integer[][] {{1, 2}, {3, 4}, {5, 6}}, multi1));
-        assertTrue(Arrays.deepEquals(new double[][] {{1, 2}, {3, 4}, {5, 6}}, multi2));
+    @Test
+    void testMultiArrays() {
+        assertArrayEquals(new Integer[][] {{1, 2}, {3, 4}, {5, 6}}, multi1);
+        assertArrayEquals(new double[][] {{1, 2}, {3, 4}, {5, 6}}, multi2);
     }
 }
